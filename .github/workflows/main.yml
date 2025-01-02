@@ -1,0 +1,79 @@
+name: ML CI/CD Pipeline
+
+# Trigger workflow on push or pull request to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Define jobs
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.9
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: |
+          pip install flake8
+
+      # Run flake8 to lint Python code
+      - name: Run Linter
+        run: flake8 src/ tests/
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint  # Run tests only if linting is successful
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.9
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Unit Tests
+        run: pytest tests/
+
+  build_and_save_model:
+    name: Build and Save Model
+    runs-on: ubuntu-latest
+    needs: test  # Run this step only if tests are successful
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.9
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Train and Save Model
+        run: |
+          python src/train.py
